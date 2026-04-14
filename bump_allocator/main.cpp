@@ -1,7 +1,6 @@
 // what are the funcs i need
 // i need a initializer func which will initialize the memory
 // i need a function which return memory address with the requested bytes
-//
 
 #include <iostream>
 #include <unistd.h>
@@ -38,98 +37,97 @@ void* beg(int bytes) {
     void* return_addr = heap_curr;
 
     cout<<"Here, take you memory boi"<<endl;
-    heap_curr = (char*)heap_curr + x;
+    heap_curr = (char*)heap_curr + bytes;
     return return_addr;
 }
 int main() {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    initialize(4096);
+    cout<<"current location of heap begin: "<<heap_start<<endl;
+    cout<<"current location of heap end: "<<heap_end<<endl;
+    cout<<"current heap curr: "<<heap_curr<<endl;
+    void* test = beg(4);
+    *(reinterpret_cast<int*>(test)) = 4;
+    cout<<"current heap curr after memory allocation: "<<heap_curr<<endl;
+    cout<<*(reinterpret_cast<int*>(test))<<endl;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
