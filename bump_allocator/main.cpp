@@ -1,9 +1,6 @@
-// what are the funcs i need
-// i need a initializer func which will initialize the memory
-// i need a function which return memory address with the requested bytes
-
 #include <iostream>
 #include <unistd.h>
+#include <cstdint>
 
 using namespace std;
 
@@ -22,32 +19,53 @@ void initialize(int bytes) {
     heap_end = sbrk(0);
 }
 
-void* beg(int bytes) {
+void reset() {
+    heap_curr = heap_start;
+}
+
+void* alloc(int bytes) {
+    int align_val = 16;
+
     int size = (char*)heap_end - (char*)heap_curr;
+    
     if(bytes > size) {
         cout<<"not enough memory"<<endl;
         return (void*)0;
     }
-
-    if(heap_start == heap_end) {
-        cout<<"memory limit reached"<<endl;
-        return (void*)0;
-    }
-
     void* return_addr = heap_curr;
+    cout<<"addr before alignment: "<<heap_curr<<endl;
+    uintptr_t aligned = (uintptr_t(heap_curr) + align_val - 1) & ~(align_val - 1);    
 
-    cout<<"Here, take you memory boi"<<endl;
-    heap_curr = (char*)heap_curr + bytes;
+    void* aligned_heap_curr = (void*) aligned;
+
+    cout<<"addr after alignment: "<<aligned_heap_curr<<endl;
+    heap_curr = (char*)aligned_heap_curr + bytes;
     return return_addr;
 }
 int main() {
     initialize(4096);
-    cout<<"current location of heap begin: "<<heap_start<<endl;
+    cout<<"current location of heap allocin: "<<heap_start<<endl;
     cout<<"current location of heap end: "<<heap_end<<endl;
     cout<<"current heap curr: "<<heap_curr<<endl;
-    void* test = beg(4);
-    *(reinterpret_cast<int*>(test)) = 4;
-    cout<<"current heap curr after memory allocation: "<<heap_curr<<endl;
-    cout<<*(reinterpret_cast<int*>(test))<<endl;
+    alloc(3);
+    cout<<"current heap curr: "<<heap_curr<<endl;
+    alloc(3);
+    cout<<"curren heap curr: "<<heap_curr<<endl;
+    reset();
+    cout<<"heap curr after reset: "<<heap_curr<<endl;
+
+    int* trial = (int*)alloc(sizeof(int));
+    *trial = 4;
+    cout<<*trial<<endl;
+    cout<<trial<<endl;
+    cout<<heap_curr<<endl;
+
+    char* char_trial = (char*)alloc(sizeof(char));
+    *char_trial = 'F';
+    cout<<*char_trial<<endl;
+    cout<<char_trial<<endl;
+    cout<<heap_curr<<endl;
+    alloc(3);
+
 }
 
