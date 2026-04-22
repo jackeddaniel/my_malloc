@@ -4,10 +4,6 @@
 
 using namespace std;
 
-void* heap_start;
-void* heap_end;
-void* heap_curr;
-
 
 struct header {
     header* next; //8 bytes
@@ -16,10 +12,20 @@ struct header {
     int padding;
     char align[8];
 };
+
+void* heap_start;
+void* heap_end;
+void* heap_curr;
+header* header_start;
+header* last_header;
+
+
 void initialize(size_t bytes) {
     //assigning the start of the heap
     heap_start = sbrk(0);
     heap_curr = heap_start;
+    header_start = nullptr;
+    last_header = nullptr;
 
     //allocating the required memory
     sbrk(bytes);
@@ -31,7 +37,19 @@ void* alloc(size_t bytes) {
     // choosing the alignment value
     size_t align_val = 16;
     header* h;
+    
     h = (header*)heap_curr;
+    h->next = nullptr;
+
+    if(header_start == nullptr) {
+        header_start = h;
+        cout<<"header_start assigned"<<endl;
+    }
+
+    if(last_header == nullptr) {
+        last_header = h;
+        cout<<"last header assigned"<<endl;
+    }
     
 
     size_t h_size = sizeof(header); //this should always be 32, if our header padding logic is correct
@@ -50,15 +68,14 @@ void* alloc(size_t bytes) {
 
     h->size = bytes;
     h->free = 0;
-    h->next = nullptr;
+    last_header->next = h;
+    last_header = h;
     cout<<"size stored in header: "<<h->size<<endl;
 
     void* payload = (void*)((char*)aligned_addr + h_size);
     cout<<"payload addr: "<<payload<<endl;
     void* payload_end = (void*)(aligned_addr + h_size + bytes);
     void* block_end = (void*)((uintptr_t(payload_end) + align_val - 1) & ~(align_val - 1));
-    h->next = (header*) block_end;
-    cout<<h->next<<endl;
 
 
     heap_curr = block_end;
@@ -66,7 +83,23 @@ void* alloc(size_t bytes) {
 
     return payload;
 }
+void iter_header_list() {
+    cout<<endl;
+    cout<<"Iterating through the header list"<<endl;
+    header* iter = header_start;
+    if(iter == nullptr) {
+        cout<<"empty list"<<endl;
+    }
 
+    while(iter != nullptr) {
+        cout<<"Header addr: "<<iter<<endl;
+        cout<<"Size of the data: "<<iter->size<<endl;
+        cout<<"Is this block free: "<<iter->free<<endl;
+        cout<<"Next header location: "<<iter->next<<endl;
+        iter = iter->next;
+    }
+    cout<<"Finished iterating throught the header list"<<endl;
+}
 void reset() {
     heap_curr = heap_start;
 }
@@ -78,6 +111,8 @@ int main() {
     alloc(16);
     alloc(32);
     cout<<"----- main ------"<<endl;
+    cout<<"header_start is : "<<header_start<<endl;
+    iter_header_list();
     cout<<"returned addr: "<<test<<endl;
 
     header* test_head = (header*)((char*)test - 32);
