@@ -13,6 +13,8 @@ struct header {
     header* next; //8 bytes
     size_t size; //8 bytes
     uint32_t free; //4 bytes
+    int padding;
+    char align[8];
 };
 void initialize(size_t bytes) {
     //assigning the start of the heap
@@ -25,49 +27,41 @@ void initialize(size_t bytes) {
     heap_end = sbrk(0);
 }
 void* alloc(size_t bytes) {
+    cout<<"heap_curr before alloc: "<<heap_curr<<endl;
+    // choosing the alignment value
     size_t align_val = 16;
-
-    header h;
-
-    h.size = bytes;
-
-    size_t h_size = sizeof(h);
+    header* h;
+    h = (header*)heap_curr;
     
-    uintptr_t aligned = (uintptr_t(heap_curr) + align_val - 1) & ~(align_val - 1);
-    size_t size = (char*)heap_end - (char*)aligned;
+
+    size_t h_size = sizeof(header); //this should always be 32, if our header padding logic is correct
+    cout<<"size of header: "<<h_size<<endl;
+    
+    uintptr_t aligned_addr = (uintptr_t(heap_curr) + align_val - 1) & ~(align_val - 1); //this gives us the next aligned address where we can put our header and memory
+    cout<<"aligned_addr: "<<(void*)aligned_addr<<endl;
+
+    size_t size = (char*)heap_end - (char*)aligned_addr;
+
 
     if(h_size + bytes > size) {
         cout<<"not enough memory"<<endl;
         return nullptr;
     }
 
+    h->size = bytes;
+    h->free = 0;
+    h->next = nullptr;
+    cout<<"size stored in header: "<<h->size<<endl;
+
+    void* payload = (void*)((char*)aligned_addr + h_size);
+    cout<<"payload addr: "<<payload<<endl;
+    h->next = (header*)(aligned_addr + h_size + bytes);
+    cout<<h->next<<endl;
 
 
-    void* return_addr = (void*)(aligned + h_size);
-    h.next = (header*)(aligned + h_size + bytes);
+    heap_curr = (void*)h->next;
 
-
-    void* aligned_heap_curr = return_addr;
-    heap_curr = (char*)aligned_heap_curr + bytes + h_size;
-    h.next = (header*)heap_curr;
-    return return_addr;
-    
-    /*
-    cout<<"addr before alignment: "<<heap_curr<<endl;
-    uintptr_t aligned = (uintptr_t(heap_curr) + align_val - 1) & ~(align_val - 1);    
-    size_t size = (char*)heap_end - (char*)aligned;
-
-    if(bytes > size) {
-        cout<<"not enough memory"<<endl;
-        return (void*)0;
-    }
-    void* return_addr = (void*) aligned;
-
-    void* aligned_heap_curr = (void*) aligned;
-    cout<<"addr after alignment: "<<aligned_heap_curr<<endl;
-    heap_curr = (char*)aligned_heap_curr + bytes;
-    return return_addr;
-    */
+    return payload;
 }
 
 void reset() {
@@ -76,11 +70,16 @@ void reset() {
 
 int main() {
     initialize(4096);
-    alloc(3);
+    void* test = alloc(4);
     alloc(5);
-    alloc(4);
-    alloc(43);
-    alloc(5);
+    alloc(16);
+    alloc(32);
+    cout<<"----- main ------"<<endl;
+    cout<<"returned addr: "<<test<<endl;
 
+    header* test_head = (header*)((char*)test - 32);
+    cout<<"header pointer must be: "<<test_head<<endl;
+    cout<<"size stored in the header: "<<test_head->size<<endl;
+    cout<<heap_curr<<endl;
 }
 
