@@ -55,11 +55,14 @@ void* alloc(size_t bytes) {
 
     void* payload = (void*)((char*)aligned_addr + h_size);
     cout<<"payload addr: "<<payload<<endl;
-    h->next = (header*)(aligned_addr + h_size + bytes);
+    void* payload_end = (void*)(aligned_addr + h_size + bytes);
+    void* block_end = (void*)((uintptr_t(payload_end) + align_val - 1) & ~(align_val - 1));
+    h->next = (header*) block_end;
     cout<<h->next<<endl;
 
 
-    heap_curr = (void*)h->next;
+    heap_curr = block_end;
+    cout<<"heap_curr after alloc: "<<heap_curr<<endl;
 
     return payload;
 }
