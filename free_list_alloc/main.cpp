@@ -83,6 +83,27 @@ void* alloc(size_t bytes) {
 
     return payload;
 }
+void free_addr(void* addr) {
+    cout<<"Addr to be freed: "<<addr<<endl;
+    cout<<"Begin the freeing"<<endl;
+    header* to_be_freed = (header*) ((char*)addr - 32);
+    if(header_start == nullptr) {
+        cout<<"Header list is empty, nothing to free"<<endl;
+        return;
+    }
+    header* iter = header_start;
+    while(iter != nullptr) {
+        cout<<"I am here: "<<iter<<endl;
+        if(iter == to_be_freed) {
+            iter->free = 1;
+            cout<<"Address freed"<<endl;
+            return;
+        }
+        iter = iter->next;
+    }
+    cout<<"The address doesn't belong to the list. So nothing to be freed"<<endl;
+    return;
+}
 void iter_header_list() {
     cout<<endl;
     cout<<"Iterating through the header list"<<endl;
@@ -108,16 +129,13 @@ int main() {
     initialize(4096);
     void* test = alloc(4);
     alloc(5);
-    alloc(16);
+    void* free_test = alloc(16);
     alloc(32);
     cout<<"----- main ------"<<endl;
     cout<<"header_start is : "<<header_start<<endl;
     iter_header_list();
-    cout<<"returned addr: "<<test<<endl;
-
-    header* test_head = (header*)((char*)test - 32);
-    cout<<"header pointer must be: "<<test_head<<endl;
-    cout<<"size stored in the header: "<<test_head->size<<endl;
-    cout<<heap_curr<<endl;
+    cout<<"After freeing"<<endl;
+    free_addr(free_test);
+    iter_header_list();
 }
 
