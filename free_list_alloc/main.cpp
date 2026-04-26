@@ -32,32 +32,60 @@ void initialize(size_t bytes) {
 
     heap_end = sbrk(0);
 }
+
+void* find_free_space(size_t bytes) {
+    cout<<endl;
+    cout<<"Iterating through the header list"<<endl;
+    header* iter = header_start;
+    if(iter == nullptr) {
+        cout<<"empty list"<<endl;
+    }
+
+    while(iter != nullptr) {
+        if(iter->free && iter->size <= bytes) {
+            return (header*) iter;
+        }
+       iter = iter->next;
+    }
+    cout<<"Finished iterating throught the header list"<<endl;
+    return nullptr;
+}
+
 void* alloc(size_t bytes) {
+    void* free_block = nullptr;
+
+    free_block = find_free_space(bytes);
+    if(free_block != nullptr) {
+        cout<<"found free block";
+        header* tmp = (header*) free_block;
+        tmp->free = 0;
+        void* payload = (char*)tmp + 32;
+        return payload;
+    }
+
     cout<<"heap_curr before alloc: "<<heap_curr<<endl;
     // choosing the alignment value
     size_t align_val = 16;
     header* h;
     
-    h = (header*)heap_curr;
-    h->next = nullptr;
+    uintptr_t aligned_addr = (uintptr_t(heap_curr) + align_val - 1) & ~(align_val - 1); //this gives us the next aligned address where we can put our header and memory
+    cout<<"aligned_addr: "<<(void*)aligned_addr<<endl;
+    h = (header*)aligned_addr;
+
 
     if(header_start == nullptr) {
         header_start = h;
         cout<<"header_start assigned"<<endl;
     }
 
-    if(last_header == nullptr) {
-        last_header = h;
+    if(last_header != nullptr && last_header != h) {
+        last_header->next = h;
         cout<<"last header assigned"<<endl;
     }
-    
 
     size_t h_size = sizeof(header); //this should always be 32, if our header padding logic is correct
     cout<<"size of header: "<<h_size<<endl;
     
-    uintptr_t aligned_addr = (uintptr_t(heap_curr) + align_val - 1) & ~(align_val - 1); //this gives us the next aligned address where we can put our header and memory
-    cout<<"aligned_addr: "<<(void*)aligned_addr<<endl;
-
     size_t size = (char*)heap_end - (char*)aligned_addr;
 
 
@@ -68,7 +96,7 @@ void* alloc(size_t bytes) {
 
     h->size = bytes;
     h->free = 0;
-    last_header->next = h;
+    h->next = nullptr;
     last_header = h;
     cout<<"size stored in header: "<<h->size<<endl;
 
@@ -137,5 +165,10 @@ int main() {
     cout<<"After freeing"<<endl;
     free_addr(free_test);
     iter_header_list();
+/*
+    alloc(16);
+    cout<<"Free blokc should be captured"<<endl;
+    iter_header_list();
+    */
 }
 
