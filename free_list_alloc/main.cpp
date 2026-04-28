@@ -19,7 +19,6 @@ void* heap_curr;
 header* header_start;
 header* last_header;
 
-
 void initialize(size_t bytes) {
     //assigning the start of the heap
     heap_start = sbrk(0);
@@ -32,6 +31,14 @@ void initialize(size_t bytes) {
 
     heap_end = sbrk(0);
 }
+
+
+void reset() {
+    heap_curr = heap_start;
+    header_start = nullptr;
+    last_header = nullptr;
+}
+
 
 void* find_free_space(size_t bytes) {
     cout<<endl;
@@ -106,10 +113,12 @@ void free_addr(void* addr) {
     cout<<"Addr to be freed: "<<addr<<endl;
     cout<<"Begin the freeing"<<endl;
     header* to_be_freed = (header*) ((char*)addr - sizeof(header));
+
     if(header_start == nullptr) {
         cout<<"Header list is empty, nothing to free"<<endl;
         return;
     }
+
     header* iter = header_start;
     while(iter != nullptr) {
         cout<<"I am here: "<<iter<<endl;
@@ -123,6 +132,50 @@ void free_addr(void* addr) {
     cout<<"The address doesn't belong to the list. So nothing to be freed"<<endl;
     return;
 }
+
+void split(header* h, size_t bytes) {
+    size_t h_size = sizeof(header);
+    size_t min_alloc_size = h_size + 4;
+
+    header* next_h = h->next;
+    size_t space = (char*)next_h - (char*)h;
+    
+    size_t free_space = space - h_size;
+
+    if(free_space < bytes + min_alloc_size) {
+        cout<<"No need to split, memory not large enough"<<endl;
+        return;
+    }
+    
+    header* tmp_h = (header*)((char*)h + h_size + bytes);
+
+    uintptr_t aligned_addr = ((uintptr_t*)tmp_h + 15) & ~(15); 
+}
+
+void free_addr_split(void* addr) {
+    cout<<"Addr to be freed: "<<addr<<endl;
+    cout<<"Begin the freeing"<<endl;
+    header* to_be_freed = (header*) ((char*)addr - sizeof(header));
+
+    if(header_start == nullptr) {
+        cout<<"Header list is empty, nothing to free"<<endl;
+        return;
+    }
+
+    header* iter = header_start;
+    while(iter != nullptr) {
+        cout<<"I am here: "<<iter<<endl;
+        if(iter == to_be_freed) {
+            iter->free = 1;
+            cout<<"Address freed"<<endl;
+            return;
+        }
+        iter = iter->next;
+    }
+    cout<<"The address doesn't belong to the list. So nothing to be freed"<<endl;
+    return;
+}
+
 void iter_header_list() {
     cout<<endl;
     cout<<"Iterating through the header list"<<endl;
@@ -140,12 +193,6 @@ void iter_header_list() {
     }
     cout<<"Finished iterating throught the header list"<<endl;
 }
-void reset() {
-    heap_curr = heap_start;
-    header_start = nullptr;
-    last_header = nullptr;
-}
-
 int main() {
     initialize(4096);
 
