@@ -58,14 +58,59 @@ void* find_free_space(size_t bytes) {
     return nullptr;
 }
 
+void split(header* h, size_t bytes) {
+    size_t h_size = sizeof(header);
+    size_t min_alloc_size = h_size + 4;
+
+    header* next_h = h->next;
+    cout<<"NEXT POINTER: "<<next_h<<endl;
+    if(next_h == nullptr) { 
+        header* end_of_block = (header*)((char*)h + h_size + h->size);
+        next_h = (header*)end_of_block;
+    }
+    cout<<"NEXT POINTER AFTER FIXING: "<<next_h<<endl;
+    
+    //total space between two header pointers
+    size_t space = (char*)next_h - (char*)h;
+   
+    //total free usable space
+    size_t free_space = space - h_size;
+
+    //check to see if the memory is worthwhile to split
+    if(free_space < bytes + min_alloc_size) {
+        cout<<"No need to split, memory not large enough"<<endl;
+        return;
+    }
+   
+    //temporary header address
+    header* tmp_h = (header*)((char*)h + h_size + bytes);
+
+    //aligned temporary header address
+    //we now have the aligned address of the new pointer
+    uintptr_t aligned_addr = ((uintptr_t)tmp_h + 15) & ~15; 
+
+    header* split_h = (header*) aligned_addr;
+    
+    split_h->next = h->next;
+    split_h->free = 1;
+    split_h->size = ((char*)next_h - (char*)split_h) - h_size;
+    h->size = ((char*)split_h - (char*)h) - h_size;
+
+    h->next = split_h;
+
+    return;
+}
+
+
+
 void* alloc(size_t bytes) {
     void* free_block = nullptr;
 
     free_block = find_free_space(bytes);
     if(free_block != nullptr) {
         header* tmp = (header*) free_block;
+        split(tmp, bytes);
         tmp->free = 0;
-        tmp->size = bytes;
         void* payload = (char*)tmp + 32;
         return payload;
     }
@@ -94,65 +139,23 @@ void* alloc(size_t bytes) {
     if(h_size + bytes > size) {
         return nullptr;
     }
-
-    h->size = bytes;
-    h->free = 0;
-    h->next = nullptr;
-    last_header = h;
+    
 
     void* payload = (void*)((char*)aligned_addr + h_size);
     void* payload_end = (void*)(aligned_addr + h_size + bytes);
     void* block_end = (void*)((uintptr_t(payload_end) + align_val - 1) & ~(align_val - 1));
 
+    h->size = (char*)block_end - ((char*)aligned_addr + h_size);
+    h->free = 0;
+    last_header = h;
 
     heap_curr = block_end;
 
     return payload;
 }
+
+
 void free_addr(void* addr) {
-    cout<<"Addr to be freed: "<<addr<<endl;
-    cout<<"Begin the freeing"<<endl;
-    header* to_be_freed = (header*) ((char*)addr - sizeof(header));
-
-    if(header_start == nullptr) {
-        cout<<"Header list is empty, nothing to free"<<endl;
-        return;
-    }
-
-    header* iter = header_start;
-    while(iter != nullptr) {
-        cout<<"I am here: "<<iter<<endl;
-        if(iter == to_be_freed) {
-            iter->free = 1;
-            cout<<"Address freed"<<endl;
-            return;
-        }
-        iter = iter->next;
-    }
-    cout<<"The address doesn't belong to the list. So nothing to be freed"<<endl;
-    return;
-}
-
-void split(header* h, size_t bytes) {
-    size_t h_size = sizeof(header);
-    size_t min_alloc_size = h_size + 4;
-
-    header* next_h = h->next;
-    size_t space = (char*)next_h - (char*)h;
-    
-    size_t free_space = space - h_size;
-
-    if(free_space < bytes + min_alloc_size) {
-        cout<<"No need to split, memory not large enough"<<endl;
-        return;
-    }
-    
-    header* tmp_h = (header*)((char*)h + h_size + bytes);
-
-    uintptr_t aligned_addr = ((uintptr_t*)tmp_h + 15) & ~(15); 
-}
-
-void free_addr_split(void* addr) {
     cout<<"Addr to be freed: "<<addr<<endl;
     cout<<"Begin the freeing"<<endl;
     header* to_be_freed = (header*) ((char*)addr - sizeof(header));
@@ -198,15 +201,18 @@ int main() {
 
     void* a = alloc(4);
     void* b = alloc(8);
-    void* c = alloc(16);
+    void* c = alloc(128);
+    void* d = alloc(128);
 
+
+    cout<<"iteration after allocations"<<endl;
+    iter_header_list();
+    free_addr(c);
+    cout<<"iteration after freeing"<<endl;
     iter_header_list();
 
-    free_addr(b);
-
-    iter_header_list();
-    
-    void* d = alloc(16);
+    alloc(4);
+    cout<<"iteration after alloc again"<<endl;
     iter_header_list();
 
 }

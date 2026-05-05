@@ -6,4 +6,9 @@ for the bump allocator, which currently works, the following are the key issues 
 
 
 
+UPDATE:
+* we have allocation, free list and pointer finding a free pointer from the free list going on. 
+* the next goal is to implement splitting
+
+
 
