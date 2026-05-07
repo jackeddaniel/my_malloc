@@ -42,6 +42,8 @@ int main() {
     check_stack_depth(&stack_start_marker);
 
     munmap(mmap_ptr, mmap_size);
+
+    std::cout<<"Size of size_t here is: "<<sizeof(size_t);
     
     return 0;
 }
