@@ -1,88 +1,59 @@
 #include "allocator.h"
 
-void* heap_start;
-void* heap_end;
-void* heap_curr;
-header* header_start;
-header* last_header;
+char* heap_start;
+char* heap_end;
 
 void initialize(size_t bytes) {
-    heap_start = sbrk(0);
-    heap_curr = heap_start;
-    header_start = nullptr;
-    last_header = nullptr;
+    heap_start = (char*)sbrk(0);
  
     sbrk(bytes);
  
-    heap_end = sbrk(0);
+    heap_end = (char*)sbrk(0);
+
+    //make a prologue block
+    char* tmp = heap_start;
+    ((header*)tmp)->size = 16 | 1;
+    tmp = tmp + sizeof(header);
+    ((footer*)tmp)->size = 16 | 1;
+
+    //make an epilogoue block
+    char* end = heap_end - sizeof(footer);
+    ((header*)end)->size = 0 | 1;
+
+    //make a big free block
+    size_t free_size = (bytes - (DSIZE + WSIZE)) & ~(ALIGNMENT-1);
+    char* new_tmp = heap_start;
+    new_tmp = new_tmp + DSIZE;
+    ((header*)new_tmp)->size = free_size;
+    new_tmp = new_tmp + (free_size - sizeof(footer));
+    ((footer*)new_tmp)->size = free_size;
 }
- 
+
 void reset() {
-    heap_curr = heap_start;
-    header_start = nullptr;
-    last_header = nullptr;
+    heap_start = nullptr;
+    heap_end = nullptr;
 }
 
-void* alloc(size_t bytes) {
-    void* free_block = find_free_space(bytes);
-    if (free_block != nullptr) {
-        header* tmp = (header*) free_block;
-        split(tmp, bytes);
-        tmp->free = 0;
-        void* payload = (char*)tmp + sizeof(header);
-        return payload;
-    }
- 
-    size_t align_val = 16;
-    uintptr_t aligned_addr = (uintptr_t(heap_curr) + align_val - 1) & ~(align_val - 1);
-    header* h = (header*)aligned_addr;
- 
-    if (header_start == nullptr) {
-        header_start = h;
-    }
- 
-    if (last_header != nullptr && last_header != h) {
-        last_header->next = h;
-    }
- 
-    size_t h_size = sizeof(header);
-    size_t size = (char*)heap_end - (char*)aligned_addr;
- 
-    if (h_size + bytes > size) {
-        return nullptr;
-    }
- 
-    void* payload = (void*)((char*)aligned_addr + h_size);
-    void* payload_end = (void*)(aligned_addr + h_size + bytes);
-    void* block_end = (void*)((uintptr_t(payload_end) + align_val - 1) & ~(align_val - 1));
- 
-    h->size = (char*)block_end - ((char*)aligned_addr + h_size);
-    h->free = 0;
-    h->next = nullptr;
-    last_header = h;
- 
-    heap_curr = block_end;
- 
-    return payload;
+void* allocate(size_t bytes) {
+    size_t aligned_size = ALIGN(bytes);
+    size_t block_size = sizeof(header) + sizeof(footer) + aligned_size;
+
+    char* bp = heap_start;
+    return (void*)bp;
 }
 
-void free_addr(void* addr) {
-    header* to_be_freed = (header*)((char*)addr - sizeof(header));
- 
-    if (header_start == nullptr) {
-        cout << "Header list is empty, nothing to free" << endl;
-        return;
-    }
- 
-    header* iter = header_start;
-    while (iter != nullptr) {
-        if (iter == to_be_freed) {
-            iter->free = 1;
-            coalesce(iter);
-            return;
-        }
-        iter = iter->next;
-    }
- 
-    cout << "The address doesn't belong to the list. So nothing to be freed" << endl;
+int main() {
+    initialize(4096);
+    
+    char* tmp = heap_start;
+    cout<<"Prologue: "<<((header*)tmp)->size<<endl;
+    tmp = tmp + 16;
+    cout<<"size of the first massive block: "<<((header*)tmp)->size<<endl;
+
+    char* new_tmp = heap_end;
+    new_tmp = new_tmp - 8;
+    cout<<"size of epilogue: "<<((footer*)new_tmp)->size<<endl;
+
 }
+
+

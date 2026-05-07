@@ -6,13 +6,30 @@
 using namespace std;
 
 struct header {
-    header* next; //8 bytes
-    size_t size; //8 bytes
-    uint32_t free; //4 bytes
-    int padding;
-    char align[8];
+    size_t size; //just 8 bytes of information
 };
 
+struct footer {
+    size_t size; //just 8 bytes of information
+};
+
+constexpr size_t WSIZE = sizeof(size_t);
+constexpr size_t DSIZE = 2 * WSIZE;
+constexpr size_t ALIGNMENT = 16;
+constexpr size_t MIN_BLOCK_SIZE = 32;
+
+//globals
+extern char* heap_start;
+extern char* heap_end;
+
+//macros
+#define ALIGN(size) ((size + ALIGNMENT-1) & ~(ALIGNMENT -1));
+#define GET(p) (((header*)p)->size);
+#define GET_SIZE(p) (GET(p) & ~(ALIGNMENT-1));
+#define PACK(size, alloc) (size | alloc);
+#define HDRP(p) ();
+
+/*
 //globals
 extern void* heap_start;
 extern void* heap_end;
@@ -35,6 +52,7 @@ void coalesce(header* h);
 
 //debug.cpp
 void iter_header_list();
+*/
 
 
 
