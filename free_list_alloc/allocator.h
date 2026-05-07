@@ -30,6 +30,9 @@ void free_addr(void* addr);
 void* find_free_space(size_t bytes);
 void split(header* h, size_t bytes);
 
+//coalesce.cpp
+void coalesce(header* h);
+
 //debug.cpp
 void iter_header_list();
 

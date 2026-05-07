@@ -78,7 +78,7 @@ void free_addr(void* addr) {
     while (iter != nullptr) {
         if (iter == to_be_freed) {
             iter->free = 1;
-            //coalesce(iter);
+            coalesce(iter);
             return;
         }
         iter = iter->next;

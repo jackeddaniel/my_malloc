@@ -20,16 +20,14 @@ void split(header* h, size_t bytes) {
         next_h = (header*)((char*)h + h_size + h->size);
     }
 
-    size_t space = (char*)next_h - (char*)h;
-    size_t free_space = space - h_size;
-
-    if (free_space < bytes + min_alloc_size) {
-        return;
-    }
 
     header* tmp_h = (header*)((char*)h + h_size + bytes);
     uintptr_t aligned_addr = ((uintptr_t)tmp_h + 15) & ~15;
     header* split_h = (header*) aligned_addr;
+
+    if(((char*) next_h - (char*)split_h) < min_alloc_size) {
+        return;
+    }
 
     split_h->next = h->next;
     split_h->free = 1;

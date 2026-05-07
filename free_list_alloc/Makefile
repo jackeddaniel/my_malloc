@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Wall -std=c++17
 
-SRCS = main.cpp allocator.cpp split.cpp debug.cpp
+SRCS = main.cpp allocator.cpp split.cpp coalesce.cpp debug.cpp
 TARGET = allocator
 
 $(TARGET): $(SRCS)

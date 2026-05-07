@@ -15,7 +15,12 @@ int main() {
     cout << "iteration after freeing" << endl;
     iter_header_list();
 
+    free_addr(b);
+    cout<<"iteration after second freeing, of the prev pointer"<<endl;
+    iter_header_list();
+
     alloc(4);
     cout << "iteration after alloc again" << endl;
     iter_header_list();
+
 }
