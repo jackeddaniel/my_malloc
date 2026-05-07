@@ -19,6 +19,9 @@ void initialize(size_t bytes) {
     //make an epilogoue block
     char* end = heap_end - sizeof(footer);
     ((header*)end)->size = 0 | 1;
+    //lets bring the epilogue 8 bytes down
+    end = end - 8;
+    ((header*)end)->size = 0 | 1;
 
     //make a big free block
     size_t free_size = (bytes - (DSIZE + WSIZE)) & ~(ALIGNMENT-1);
@@ -38,10 +41,18 @@ void* allocate(size_t bytes) {
     size_t aligned_size = ALIGN(bytes);
     size_t block_size = sizeof(header) + sizeof(footer) + aligned_size;
 
-    char* bp = heap_start;
+    char* bp = heap_start + DSIZE;
+
+    for(bp; GET_SIZE(bp) != 0; bp + GET_SIZE(bp)) {
+
+    }
+
+
     return (void*)bp;
+
 }
 
+/*
 int main() {
     initialize(4096);
     
@@ -51,9 +62,11 @@ int main() {
     cout<<"size of the first massive block: "<<((header*)tmp)->size<<endl;
 
     char* new_tmp = heap_end;
-    new_tmp = new_tmp - 8;
+    new_tmp = new_tmp - 16;
     cout<<"size of epilogue: "<<((footer*)new_tmp)->size<<endl;
 
+    size_t test = GET_SIZE(tmp);
+    cout<<"GET_SIZE test: "<<test<<endl;
 }
 
-
+*/

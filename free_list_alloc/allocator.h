@@ -23,11 +23,17 @@ extern char* heap_start;
 extern char* heap_end;
 
 //macros
-#define ALIGN(size) ((size + ALIGNMENT-1) & ~(ALIGNMENT -1));
-#define GET(p) (((header*)p)->size);
-#define GET_SIZE(p) (GET(p) & ~(ALIGNMENT-1));
-#define PACK(size, alloc) (size | alloc);
-#define HDRP(p) ();
+#define ALIGN(size) ((size + ALIGNMENT-1) & ~(ALIGNMENT -1))
+#define GET(p) (((header*)p)->size)
+#define GET_SIZE(p) (GET(p) & ~(ALIGNMENT-1))
+#define PACK(size, alloc) (size | alloc)
+#define HDRP(p) ()
+
+//allocator.cpp
+void initialize(size_t bytes);
+
+//debug.cpp
+void iter_heap();
 
 /*
 //globals

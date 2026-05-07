@@ -1,18 +1,12 @@
 #include "allocator.h"
 
-void iter_header_list() {
-    cout << endl;
-    cout << "Iterating through the header list" << endl;
-    header* iter = header_start;
-    if (iter == nullptr) {
-        cout << "empty list" << endl;
+
+void iter_heap() {
+    char* bp = heap_start + DSIZE;
+
+    for(bp; GET_SIZE(bp) != 0; bp = bp + GET_SIZE(bp)) {
+        cout<<"This the first byte(char): "<<(void*)bp<<endl;
+        cout<<"This is the size it stores: "<<GET_SIZE(bp)<<endl;
     }
-    while (iter != nullptr) {
-        cout << "Header addr: " << iter << endl;
-        cout << "Size of the data: " << iter->size << endl;
-        cout << "Is this block free: " << iter->free << endl;
-        cout << "Next header location: " << iter->next << endl;
-        iter = iter->next;
-    }
-    cout << "Finished iterating through the header list" << endl;
 }
+
