@@ -7,8 +7,14 @@ int main() {
     initialize(4096);
     iter_heap();
 
-    allocate(4);
+//    cout<<allocate(4032)<<endl;
+    cout<<allocate(4)<<endl;
+    cout<<allocate(4)<<endl;
+    cout<<allocate(3984)<<endl;
+
+
     iter_heap();
+
 }
 
 

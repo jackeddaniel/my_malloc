@@ -43,24 +43,27 @@ void* allocate(size_t bytes) {
 
     char* bp = heap_start + DSIZE;
 
-    for(bp; GET_SIZE(bp) != 0; bp + GET_SIZE(bp)) {
-        if(aligned_size <= (GET_SIZE(bp) - DSIZE)) {
-            // we can use this block
-            // we add the block
+    for(bp; GET_SIZE(bp) != 0; bp += GET_SIZE(bp)) {
+
+        if((GET(bp) % ALIGNMENT) == 0 && (aligned_size <= (GET_SIZE(bp) - DSIZE))) {
+            
+            char* payload = bp + WSIZE;
+
             size_t new_blk_size = aligned_size + DSIZE;
             size_t splt_blk_size = ((header*)bp)->size - new_blk_size;
 
-            char* old_footer = (bp + ((header*)bp)->size) - sizeof(footer);
-            char* splt_header = bp + new_blk_size;
+            if(splt_blk_size >= MIN_BLOCK_SIZE) {
+                char* old_footer = (bp + ((header*)bp)->size) -sizeof(footer);
+                char* splt_header = bp + new_blk_size;
 
-            char* new_footer = (bp + new_blk_size) - sizeof(footer);
-            ((header*)bp)->size = new_blk_size | 1;
-            ((footer*)new_footer)->size = new_blk_size | 1;
+                char* new_footer = (bp + new_blk_size) - sizeof(footer);
+                ((header*)bp)->size = new_blk_size | 1;
+                ((footer*)new_footer)->size = new_blk_size | 1;
 
-            ((header*)splt_header)->size = splt_blk_size;
-            ((footer*)old_footer)->size = splt_blk_size;
-
-            char* payload = bp + WSIZE;
+                ((header*)splt_header)->size = splt_blk_size;
+                ((footer*)old_footer)->size = splt_blk_size;
+            }
+            ((header*)bp)->size = ((header*)bp)->size | 1;
 
             return (void*)payload;
         }

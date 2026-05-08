@@ -4,9 +4,15 @@
 void iter_heap() {
     char* bp = heap_start + DSIZE;
 
-    for(bp; GET_SIZE(bp) != 0; bp = bp + GET_SIZE(bp)) {
+    for(bp; GET_SIZE(bp) != 0; bp += GET_SIZE(bp)) {
+
         cout<<"This the first byte(char): "<<(void*)bp<<endl;
         cout<<"This is the size it stores: "<<GET_SIZE(bp)<<endl;
+        if(GET(bp) % ALIGNMENT == 0) {
+            cout<<"This block is free"<<endl;
+        } else {
+            cout<<"This block is allocated"<<endl;
+        }
     }
 }
 
