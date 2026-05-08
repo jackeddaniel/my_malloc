@@ -24,6 +24,7 @@ extern char* heap_end;
 
 //macros
 #define ALIGN(size) ((size + ALIGNMENT-1) & ~(ALIGNMENT -1))
+#define IS_ALLOC(p) (GET(p) & 1)
 #define GET(p) (((header*)p)->size)
 #define GET_SIZE(p) (GET(p) & ~(ALIGNMENT-1))
 #define PACK(size, alloc) (size | alloc)

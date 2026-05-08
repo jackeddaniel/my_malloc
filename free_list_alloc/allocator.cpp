@@ -18,7 +18,6 @@ void initialize(size_t bytes) {
 
     //make an epilogoue block
     char* end = heap_end - sizeof(footer);
-    ((header*)end)->size = 0 | 1;
     //lets bring the epilogue 8 bytes down
     end = end - 8;
     ((header*)end)->size = 0 | 1;
@@ -39,24 +38,23 @@ void reset() {
 
 void* allocate(size_t bytes) {
     size_t aligned_size = ALIGN(bytes);
-    size_t block_size = sizeof(header) + sizeof(footer) + aligned_size;
 
     char* bp = heap_start + DSIZE;
 
     for(bp; GET_SIZE(bp) != 0; bp += GET_SIZE(bp)) {
 
-        if((GET(bp) % ALIGNMENT) == 0 && (aligned_size <= (GET_SIZE(bp) - DSIZE))) {
+        if(!(IS_ALLOC(bp)) && (aligned_size <= (GET_SIZE(bp) - DSIZE))) {
             
             char* payload = bp + WSIZE;
 
             size_t new_blk_size = aligned_size + DSIZE;
-            size_t splt_blk_size = ((header*)bp)->size - new_blk_size;
+            size_t splt_blk_size = GET_SIZE(bp) - new_blk_size;
 
             if(splt_blk_size >= MIN_BLOCK_SIZE) {
-                char* old_footer = (bp + ((header*)bp)->size) -sizeof(footer);
+                char* old_footer = (bp + ((header*)bp)->size) - WSIZE;
                 char* splt_header = bp + new_blk_size;
 
-                char* new_footer = (bp + new_blk_size) - sizeof(footer);
+                char* new_footer = (bp + new_blk_size) - WSIZE;
                 ((header*)bp)->size = new_blk_size | 1;
                 ((footer*)new_footer)->size = new_blk_size | 1;
 
@@ -64,6 +62,8 @@ void* allocate(size_t bytes) {
                 ((footer*)old_footer)->size = splt_blk_size;
             }
             ((header*)bp)->size = ((header*)bp)->size | 1;
+            ((footer*)(bp + GET_SIZE(bp) - WSIZE))->size = GET_SIZE(bp) | 1;
+            
 
             return (void*)payload;
         }
