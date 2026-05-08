@@ -31,6 +31,7 @@ extern char* heap_end;
 
 //allocator.cpp
 void initialize(size_t bytes);
+void* allocate(size_t bytes);
 
 //debug.cpp
 void iter_heap();
