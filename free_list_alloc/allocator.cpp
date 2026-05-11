@@ -72,21 +72,34 @@ void* allocate(size_t bytes) {
     return nullptr;
 }
 
-/*
-int main() {
-    initialize(4096);
-    
-    char* tmp = heap_start;
-    cout<<"Prologue: "<<((header*)tmp)->size<<endl;
-    tmp = tmp + 16;
-    cout<<"size of the first massive block: "<<((header*)tmp)->size<<endl;
-
-    char* new_tmp = heap_end;
-    new_tmp = new_tmp - 16;
-    cout<<"size of epilogue: "<<((footer*)new_tmp)->size<<endl;
-
-    size_t test = GET_SIZE(tmp);
-    cout<<"GET_SIZE test: "<<test<<endl;
+void merge(char* first, char* second) {
+    if(!(IS_ALLOC(first)) && !(IS_ALLOC(second))) {
+        size_t new_size = ((header*)first)->size + ((header*)second)->size;
+        ((header*)first)->size = new_size;
+        char* second_footer = second + ((header*)second)->size - WSIZE;
+        ((footer*)second_footer)->size = new_size;
+    }
 }
 
-*/
+void coalesce(char* pt) {
+    if(pt == nullptr) return;
+
+    char* prev_pt_header = pt - GET_SIZE((pt - WSIZE));
+    char* next_pt_header = pt + GET_SIZE(pt);
+
+    merge(pt, next_pt_header);
+    merge(prev_pt_header, pt);
+}
+
+void free_addr(void* pt) {
+    if(pt == nullptr) return;
+    char* h = (char*)pt - WSIZE;
+    if(!IS_ALLOC(h)) return;
+    
+    //clearing the alloc bit
+    ((header*)h)->size = GET_SIZE(h);
+    coalesce(h);
+}
+
+
+
