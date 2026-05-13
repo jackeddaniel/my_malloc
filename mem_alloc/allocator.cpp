@@ -97,7 +97,10 @@ void free_addr(void* pt) {
     if(!IS_ALLOC(h)) return;
     
     //clearing the alloc bit
-    ((header*)h)->size = GET_SIZE(h);
+    size_t size = GET_SIZE(h);
+    ((header*)h)->size = size;
+
+    ((footer*)(h + size - WSIZE))->size = size;
     coalesce(h);
 }
 
