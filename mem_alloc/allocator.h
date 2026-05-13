@@ -13,6 +13,7 @@ struct footer {
     size_t size; //just 8 bytes of information
 };
 
+constexpr size_t HEAP_SIZE = 1 << 20;
 constexpr size_t WSIZE = sizeof(size_t);
 constexpr size_t DSIZE = 2 * WSIZE;
 constexpr size_t ALIGNMENT = 16;

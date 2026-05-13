@@ -4,8 +4,7 @@
 using namespace std;
 
 int main() {
-    initialize(4096);
-    iter_heap();
+    
 
 //    void* allocate(4032)<<endl;
     void* a = allocate(4);

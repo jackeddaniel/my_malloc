@@ -1,12 +1,12 @@
 #include "allocator.h"
 
-char* heap_start;
-char* heap_end;
+char* heap_start = nullptr;
+char* heap_end = nullptr;
 
 void initialize(size_t bytes) {
     heap_start = (char*)sbrk(0);
  
-    sbrk(bytes);
+    if(sbrk(bytes) == (void*)-1) return;
  
     heap_end = (char*)sbrk(0);
 
@@ -37,6 +37,15 @@ void reset() {
 }
 
 void* allocate(size_t bytes) {
+    if(heap_start == nullptr) {
+        initialize(HEAP_SIZE);
+    }
+
+    if(bytes == 0) {
+        return nullptr;
+    }
+
+
     size_t aligned_size = ALIGN(bytes);
 
     char* bp = heap_start + DSIZE;
@@ -93,6 +102,9 @@ void coalesce(char* pt) {
 
 void free_addr(void* pt) {
     if(pt == nullptr) return;
+    if(pt < heap_start || pt > heap_end) return;
+
+
     char* h = (char*)pt - WSIZE;
     if(!IS_ALLOC(h)) return;
     
