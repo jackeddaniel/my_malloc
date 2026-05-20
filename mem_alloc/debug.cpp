@@ -1,6 +1,5 @@
 #include "allocator.h"
 
-
 void iter_heap() {
     char* bp = heap_start + DSIZE;
 
@@ -13,6 +12,13 @@ void iter_heap() {
         } else {
             cout<<"This block is free"<<endl;
         }
+    }
+}
+
+void iter_free_list() {
+    for(int i = 0; i < 16; i++) {
+        cout<<"we're at: "<<i<<endl;
+        cout<<(void*)free_list[i]<<endl;
     }
 }
 

@@ -31,6 +31,9 @@ int main() {
     free_addr(c);
     iter_heap();
 
+    cout<<"Iterating through the free list now"<<endl;
+    iter_free_list();
+
 }
 
 

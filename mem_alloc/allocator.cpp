@@ -2,6 +2,8 @@
 
 char* heap_start = nullptr;
 char* heap_end = nullptr;
+char* free_list[16];
+
 
 void initialize(size_t bytes) {
     heap_start = (char*)sbrk(0);
@@ -29,6 +31,7 @@ void initialize(size_t bytes) {
     ((header*)new_tmp)->size = free_size;
     new_tmp = new_tmp + (free_size - sizeof(footer));
     ((footer*)new_tmp)->size = free_size;
+    initialize_free_list(free_list);
 }
 
 void reset() {
