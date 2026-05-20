@@ -45,6 +45,7 @@ void free_addr(void* pt);
 void initialize_free_list(char* (&free_list)[16]);
 void insert(int index, char* free_block_h);
 void insert_free_block(char* free_block_h);
+void remove_free_block(char* free_block_h);
 
 //debug.cpp
 void iter_heap();

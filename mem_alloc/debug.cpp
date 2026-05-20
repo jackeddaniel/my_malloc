@@ -18,7 +18,19 @@ void iter_heap() {
 void iter_free_list() {
     for(int i = 0; i < 16; i++) {
         cout<<"we're at: "<<i<<endl;
-        cout<<(void*)free_list[i]<<endl;
+        char* iter = free_list[i];
+
+        if(iter == nullptr) {
+            cout<<"Empty list "<<(void*)iter<<endl;
+            continue;
+        }
+
+        while(iter != nullptr) {
+            cout<<"    "<<(void*)iter<<endl;
+
+            iter = NEXT_FREE_BLK(iter);
+        }
+
     }
 }
 

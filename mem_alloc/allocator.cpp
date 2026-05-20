@@ -32,6 +32,7 @@ void initialize(size_t bytes) {
     new_tmp = new_tmp + (free_size - sizeof(footer));
     ((footer*)new_tmp)->size = free_size;
     initialize_free_list(free_list);
+    insert_free_block(heap_start + DSIZE);
 }
 
 void reset() {
@@ -58,6 +59,7 @@ void* allocate(size_t bytes) {
         if(!(IS_ALLOC(bp)) && (aligned_size <= (GET_SIZE(bp) - DSIZE))) {
             
             char* payload = bp + WSIZE;
+            remove_free_block(bp);
 
             size_t new_blk_size = aligned_size + DSIZE;
             size_t splt_blk_size = GET_SIZE(bp) - new_blk_size;
@@ -117,6 +119,8 @@ void free_addr(void* pt) {
 
     ((footer*)(h + size - WSIZE))->size = size;
     coalesce(h);
+
+    insert_free_block(h);
 }
 
 

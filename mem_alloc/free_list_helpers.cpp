@@ -23,6 +23,17 @@ void initialize_free_list(char* (&free_list)[16]) {
     }
 }
 
+int compute_bin_index(size_t sz) {
+    int index = 0;
+    sz = sz << 5;
+
+    while(sz > 1 && index < 15) {
+        sz >>= 1;
+        index++;
+    }
+    return index;
+}
+
 void insert(int index, char* free_block_h) {
     //*(char**)(free_block_h + WSIZE) = head;
     char* head = free_list[index];
@@ -35,13 +46,14 @@ void insert(int index, char* free_block_h) {
         PREV_FREE_BLK(head) = free_block_h;
     }
 
-    head = free_block_h;
     free_list[index] = free_block_h;
     return;
 }
 
 void insert_free_block(char* free_block_h) {
+    cout<<"INSERTING FREE BLOCK"<<endl;
     size_t free_block_size = GET_SIZE(free_block_h);
+    cout<<"Size of the free block: "<<free_block_size<<endl;
     
     int index = 0;
     size_t sz = free_block_size << 5;
@@ -53,5 +65,31 @@ void insert_free_block(char* free_block_h) {
 
     //insert function
     insert(index, free_block_h);
+}
+
+void remove_free_block(char* free_block_h) {
+    cout<<"REMOVING FREE BLOCK"<<endl;
+    char* prev_blk = PREV_FREE_BLK(free_block_h);
+    char* next_blk = NEXT_FREE_BLK(free_block_h);
+
+    int index = compute_bin_index(GET_SIZE(free_block_h));
+    cout<<"The index of the block in the free list is: "<<index<<endl;
+    size_t sz = GET_SIZE(free_block_h);
+    cout<<"The size of the free block is: "<<sz<<endl;
+
+    // only one free block
+    if(prev_blk == nullptr && prev_blk == next_blk) {
+        free_list[index] = nullptr;
+    } else if(prev_blk == nullptr) {
+        PREV_FREE_BLK(next_blk) = nullptr;
+        free_list[index] = next_blk;
+
+    } else if(next_blk == nullptr) {
+        NEXT_FREE_BLK(prev_blk) = nullptr;
+    } else {
+        NEXT_FREE_BLK(prev_blk) = next_blk;
+        PREV_FREE_BLK(next_blk) = prev_blk;
+
+    }
 }
 
