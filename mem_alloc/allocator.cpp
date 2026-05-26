@@ -38,6 +38,7 @@ void initialize(size_t bytes) {
 void reset() {
     heap_start = nullptr;
     heap_end = nullptr;
+    initialize_free_list(free_list);
 }
 
 void* allocate(size_t bytes) {
@@ -49,49 +50,52 @@ void* allocate(size_t bytes) {
         return nullptr;
     }
 
+    size_t aligned_size = ALIGN(bytes) + DSIZE;
+    char* free_block = find_free_block(aligned_size);
 
-    size_t aligned_size = ALIGN(bytes);
+    if(free_block == nullptr) return (void*)nullptr;
 
-    char* bp = heap_start + DSIZE;
+    remove_free_block(free_block);
 
-    for(bp; GET_SIZE(bp) != 0; bp += GET_SIZE(bp)) {
+    size_t free_blk_sz = GET_SIZE(free_block);
+    size_t split_blk_sz = free_blk_sz - aligned_size;
 
-        if(!(IS_ALLOC(bp)) && (aligned_size <= (GET_SIZE(bp) - DSIZE))) {
-            
-            char* payload = bp + WSIZE;
-            remove_free_block(bp);
+    if(split_blk_sz >= MIN_BLOCK_SIZE) {
+        //new headers
+        char* old_h = free_block;
+        char* splt_h = free_block + aligned_size;
+        
+        //new footers
+        char* new_f = splt_h - WSIZE;
+        char* splt_f = splt_h + split_blk_sz - WSIZE;
 
-            size_t new_blk_size = aligned_size + DSIZE;
-            size_t splt_blk_size = GET_SIZE(bp) - new_blk_size;
+        ((header*)old_h)->size = aligned_size | 1;
+        ((footer*)new_f)->size = aligned_size | 1;
 
-            if(splt_blk_size >= MIN_BLOCK_SIZE) {
-                char* old_footer = (bp + ((header*)bp)->size) - WSIZE;
-                char* splt_header = bp + new_blk_size;
+        ((header*)splt_h)->size = split_blk_sz;
+        ((footer*)splt_f)->size = split_blk_sz;
 
-                char* new_footer = (bp + new_blk_size) - WSIZE;
-                ((header*)bp)->size = new_blk_size | 1;
-                ((footer*)new_footer)->size = new_blk_size | 1;
-
-                ((header*)splt_header)->size = splt_blk_size;
-                ((footer*)old_footer)->size = splt_blk_size;
-            }
-            ((header*)bp)->size = ((header*)bp)->size | 1;
-            ((footer*)(bp + GET_SIZE(bp) - WSIZE))->size = GET_SIZE(bp) | 1;
-            
-
-            return (void*)payload;
-        }
+        insert_free_block(splt_h);
+    } else {
+        ((header*)free_block)->size = GET_SIZE(free_block) | 1;
+        char* free_blk_footer = free_block + GET_SIZE(free_block) - WSIZE;
+        ((footer*)free_blk_footer)->size = GET_SIZE(free_block) | 1;
     }
 
-    return nullptr;
+    char* payload = free_block + WSIZE;
+    
+    return (void*)payload;
 }
 
 void merge(char* first, char* second) {
     if(!(IS_ALLOC(first)) && !(IS_ALLOC(second))) {
+        remove_free_block(first);
+        remove_free_block(second);
         size_t new_size = ((header*)first)->size + ((header*)second)->size;
         ((header*)first)->size = new_size;
         char* second_footer = second + ((header*)second)->size - WSIZE;
         ((footer*)second_footer)->size = new_size;
+        insert_free_block(first);
     }
 }
 
@@ -118,10 +122,8 @@ void free_addr(void* pt) {
     ((header*)h)->size = size;
 
     ((footer*)(h + size - WSIZE))->size = size;
-    coalesce(h);
-
     insert_free_block(h);
+    coalesce(h);
 }
-
 
 

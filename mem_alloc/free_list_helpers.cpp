@@ -25,7 +25,7 @@ void initialize_free_list(char* (&free_list)[16]) {
 
 int compute_bin_index(size_t sz) {
     int index = 0;
-    sz = sz << 5;
+    sz = sz >> 5;
 
     while(sz > 1 && index < 15) {
         sz >>= 1;
@@ -55,15 +55,7 @@ void insert_free_block(char* free_block_h) {
     size_t free_block_size = GET_SIZE(free_block_h);
     cout<<"Size of the free block: "<<free_block_size<<endl;
     
-    int index = 0;
-    size_t sz = free_block_size << 5;
-
-    while(sz > 1 && index < 15) {
-        sz >>= 1;
-        index++;
-    }
-
-    //insert function
+    int index = compute_bin_index(free_block_size);
     insert(index, free_block_h);
 }
 
@@ -89,7 +81,27 @@ void remove_free_block(char* free_block_h) {
     } else {
         NEXT_FREE_BLK(prev_blk) = next_blk;
         PREV_FREE_BLK(next_blk) = prev_blk;
-
     }
 }
 
+char* iter_list(char* head, size_t bytes) {
+    char* iter = head;
+    while(iter != nullptr) {
+        if(GET_SIZE(iter) >= bytes) return iter;
+        iter = NEXT_FREE_BLK(iter);
+    }
+    return iter;
+}
+
+char* find_free_block(size_t bytes) {
+    int bin_index = compute_bin_index(bytes);
+    if(bin_index >= 16) return nullptr;
+    while(bin_index < 16 && free_list[bin_index] == nullptr) bin_index++;
+
+    while(bin_index < 16) {
+        char* free_blk = iter_list(free_list[bin_index], bytes);
+        if(free_blk != nullptr) return free_blk;
+        bin_index++;
+    }
+    return nullptr;
+}

@@ -4,11 +4,13 @@
 using namespace std;
 
 int main() {
-    cout<<"Iterating through the free list now"<<endl;
-    allocate(32);
-    iter_heap();
+    void* a = allocate(32);
+    void* b = allocate(64);
+     
     iter_free_list();
-
+    free_addr(b);
+    void* c = allocate(1028);
+    iter_free_list();
 }
 
 

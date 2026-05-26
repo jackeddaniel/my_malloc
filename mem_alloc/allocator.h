@@ -22,7 +22,7 @@ constexpr size_t MIN_BLOCK_SIZE = 32;
 //globals
 extern char* heap_start;
 extern char* heap_end;
-extern char* free_list[];
+extern char* free_list[16];
 
 //macros
 #define ALIGN(size) ((size + ALIGNMENT-1) & ~(ALIGNMENT -1))
@@ -46,6 +46,7 @@ void initialize_free_list(char* (&free_list)[16]);
 void insert(int index, char* free_block_h);
 void insert_free_block(char* free_block_h);
 void remove_free_block(char* free_block_h);
+char* find_free_block(size_t bytes);
 
 //debug.cpp
 void iter_heap();
