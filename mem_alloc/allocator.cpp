@@ -122,7 +122,6 @@ void free_addr(void* pt) {
     ((header*)h)->size = size;
 
     ((footer*)(h + size - WSIZE))->size = size;
-    insert_free_block(h);
     coalesce(h);
 }
 

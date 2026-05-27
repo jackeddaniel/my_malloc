@@ -10,5 +10,33 @@ UPDATE:
 * we have allocation, free list and pointer finding a free pointer from the free list going on. 
 * the next goal is to implement splitting
 
+Phase 2 — Serious allocator
+
+Build:
+
+segregated free lists
+best-fit / first-fit comparisons
+fragmentation metrics
+alignment guarantees
+thread safety (mutex)
+calloc
+realloc
+memory poisoning
+double-free detection
+canaries
+corruption detection
+Phase 3 — Resume-worthy
+
+This is where recruiters care.
+
+Do:
+
+benchmark against glibc malloc
+multithread stress tests
+perf profiling
+fragmentation visualization
+LD_PRELOAD override
+custom stats dashboard
+lock contention analysis
 
 

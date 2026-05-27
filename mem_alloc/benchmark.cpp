@@ -1,5 +1,5 @@
 // benchmark.cpp — Speed + utilization tests for your allocator vs glibc malloc
-// Compile: g++ -O2 -o bench benchmark.cpp allocator.cpp debug.cpp
+// Compile: g++ -O2 -o bench benchmark.cpp allocator.cpp free_list_helpers.cpp debug.cpp
 // Run:     ./bench
 
 #include "allocator.h"
@@ -120,8 +120,8 @@ void bench_sequential(int N, size_t sz) {
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Uses a fixed random seed so both allocators see the same request stream.
-// glibc is expected to win because its segregated free lists give O(1) lookup;
-// yours does an O(n) first-fit scan through an increasingly fragmented heap.
+// glibc is expected to win here due to per-thread caches and lower overhead;
+// yours uses segregated free lists with first-fit within each size class.
 
 void bench_random(int N) {
     section("Workload 2 — Random sizes 8–4096 (real-world mixed traffic)");
@@ -154,7 +154,7 @@ void bench_random(int N) {
 
     ys.report("your allocator");
     ms.report("system malloc");
-    printf("  NOTE: glibc likely wins — ~8 size-class buckets vs your O(n) first-fit.\n");
+    printf("  NOTE: glibc likely wins — per-thread caches vs your single-heap segregated list.\n");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ void bench_random(int N) {
 // Alloc N pointers, then free them in random order.  Interesting because:
 //   * your coalesce() is called on every free and merges at most two neighbours.
 //   * Random free order means many small isolated free blocks before the big
-//     merge happens, stressing the O(N) scan on subsequent allocations.
+//     merge happens, stressing coalesce and bucket lookup on subsequent allocations.
 //   * We measure total time for the free phase separately from the alloc phase.
 
 void bench_alloc_many_free_all(int N, size_t sz) {
